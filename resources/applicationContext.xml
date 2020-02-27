@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop
+       http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!--
+         通过abstract属性指定CbcDao是个接口，spring容器不用帮助我们创建对象
+    -->
+    <bean id="cbcDao" class="com.java.dao.CbcDao" abstract="true"></bean>
+    <bean id="cbcDaoImpl"  class="com.java.dao.impl.CbcDaoImpl" parent="cbcDao"></bean>
+
+    <!--将Security、Clean、Logger切面的对象创建交给spring容器-->
+    <bean id="sec" class="com.java.anquan.Security"></bean>
+    <bean id="cn" class="com.java.cache.Clean"></bean>
+    <bean id="lg" class="com.java.logs.Logger"></bean>
+    <bean id="login" class="com.java.denglu.Login"></bean>
+
+    <!--配置aop-->
+    <aop:config>
+        <!--配置切入点-->
+        <aop:pointcut id="qieDian" expression="execution (* com.java.dao.impl.*.*(..))"></aop:pointcut>
+        <!--配置切面与前置通知-->
+        <aop:aspect ref="login" order="1">
+            <aop:before method="login" pointcut-ref="qieDian"></aop:before>
+        </aop:aspect>
+        <aop:aspect ref="sec" order="2">
+            <aop:before method="isSecurity" pointcut-ref="qieDian"></aop:before>
+        </aop:aspect>
+        <!--后置通知-->
+        <aop:aspect ref="lg" order="2">
+            <aop:after method="log" pointcut-ref="qieDian"></aop:after>
+        </aop:aspect>
+        <aop:aspect ref="cn" order="1">
+            <aop:after method="cleanResource" pointcut-ref="qieDian"></aop:after>
+        </aop:aspect>
+
+    </aop:config>
+</beans>
